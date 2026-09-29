@@ -7,6 +7,23 @@ export interface NucleusUser {
   email: string;
 }
 
+export interface NucleusCredential {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  document_type: string;
+  issued_at: string | null;
+  expires_at: string | null;
+  is_verified: boolean;
+  logo_url: string | null;
+}
+
+/** Laravel's default paginated resource collection */
+export interface Paginated<T> {
+  data: T[];
+  meta: { current_page: number; last_page: number; total: number };
+}
+
 export interface LoginResult {
   token: string;
   user: NucleusUser;
@@ -81,6 +98,14 @@ export function me(token: string): Promise<NucleusUser> {
   return request<NucleusUser | { data: NucleusUser }>("/api/mobile/me", { token }).then((body) =>
     "data" in body ? body.data : body,
   );
+}
+
+export function listCredentials(
+  token: string,
+  page: number,
+  perPage = 20,
+): Promise<Paginated<NucleusCredential>> {
+  return request(`/api/mobile/credentials?page=${page}&per_page=${perPage}`, { token });
 }
 
 export function logout(token: string): Promise<void> {
