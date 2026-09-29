@@ -1,17 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Redirect } from "expo-router";
+import { useAuth } from "../lib/auth";
 
+// "/" is the launch URL; send it to whichever side of the auth guard applies
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  const { session } = useAuth();
+  return <Redirect href={session ? "/profile" : "/login"} />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
