@@ -7,18 +7,31 @@ export default function Profile() {
   const { session, signOut } = useAuth();
   const [user, setUser] = useState<NucleusUser | undefined>(session?.user);
   const [error, setError] = useState<string>();
+  // Login and restore already fetched the user; only a session restored
+  // offline arrives without one
+  const [loading, setLoading] = useState(!session?.user);
 
-  // Confirms the token actually works against an authenticated endpoint
-  useEffect(() => {
+  const fetchUser = () => {
     if (!session) return;
     me(session.token)
       .then(setUser)
       .catch((e) => {
         if (e instanceof NucleusError && e.status === 401) signOut();
         else setError(e instanceof Error ? e.message : String(e));
-      });
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const retry = () => {
+    setLoading(true);
+    setError(undefined);
+    fetchUser();
+  };
+
+  useEffect(() => {
+    if (!session?.user) fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.token]);
+  }, []);
 
   return (
     <View style={styles.screen}>
@@ -29,10 +42,19 @@ export default function Profile() {
           </Text>
           <Text style={styles.email}>{user.email}</Text>
         </View>
-      ) : (
+      ) : loading ? (
         <ActivityIndicator />
+      ) : null}
+      {error && (
+        <View style={styles.errorRow}>
+          <Text testID="profile-error" style={styles.error}>
+            {error}
+          </Text>
+          <Pressable testID="profile-retry" accessibilityRole="button" onPress={retry}>
+            <Text style={styles.retry}>Retry</Text>
+          </Pressable>
+        </View>
       )}
-      {error && <Text style={styles.error}>{error}</Text>}
 
       <Pressable
         testID="profile-logout"
@@ -58,7 +80,9 @@ const styles = StyleSheet.create({
   },
   welcome: { fontSize: 22, fontWeight: "700", color: "#1A1D21" },
   email: { fontSize: 15, color: "#5B6470" },
-  error: { color: "#D64545", fontSize: 14 },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  error: { color: "#D64545", fontSize: 14, flexShrink: 1 },
+  retry: { color: "#4962E1", fontSize: 14, fontWeight: "600" },
   button: {
     borderRadius: 10,
     borderWidth: 1,
