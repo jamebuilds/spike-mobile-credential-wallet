@@ -26,13 +26,13 @@ function RootNavigator() {
   // SDK 57 has no `redirectTo`: a blocked route falls back to the first
   // available screen, so exactly one of these is reachable at a time.
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Protected guard={status === "signedOut"}>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="login" />
       </Stack.Protected>
       <Stack.Protected guard={status === "signedIn"}>
-        <Stack.Screen name="profile" options={{ title: "Profile" }} />
+        <Stack.Screen name="(tabs)" />
       </Stack.Protected>
     </Stack>
   );

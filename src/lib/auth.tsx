@@ -16,6 +16,8 @@ interface AuthContextValue {
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Re-fetches /me; a 401 signs out, other errors are thrown to the caller */
+  reloadUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -68,7 +70,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) await nucleus.logout(token).catch(() => {});
   };
 
-  return <AuthContext value={{ status, session, signIn, signOut }}>{children}</AuthContext>;
+  const reloadUser = async () => {
+    if (!session) return;
+    try {
+      const user = await nucleus.me(session.token);
+      setSession((current) => current && { ...current, user });
+    } catch (e) {
+      if (e instanceof NucleusError && e.status === 401) await signOut();
+      else throw e;
+    }
+  };
+
+  return (
+    <AuthContext value={{ status, session, signIn, signOut, reloadUser }}>{children}</AuthContext>
+  );
 }
 
 export function useAuth(): AuthContextValue {
